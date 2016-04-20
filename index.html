@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=640">
+
+    <link rel="stylesheet" href="stylesheets/core.css" media="screen">
+    <link rel="stylesheet" href="stylesheets/mobile.css" media="handheld, only screen and (max-device-width:640px)">
+    <link rel="stylesheet" href="stylesheets/github-light.css">
+
+    <script type="text/javascript" src="javascripts/modernizr.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="javascripts/headsmart.min.js"></script>
+    <script type="text/javascript">
+      $(document).ready(function () {
+        $('#main_content').headsmart()
+      })
+    </script>
+    <title>Online.GitHub.io by GaoshuaiSong</title>
+  </head>
+
+  <body>
+    <a id="forkme_banner" href="https://github.com/GaoshuaiSong/online.github.io">View on GitHub</a>
+    <div class="shell">
+
+      <header>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <h1>Online.GitHub.io</h1>
+            <h2>内联函数</h2>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+      </header>
+
+      <section id="downloads">
+        <span class="inner">
+          <a href="https://github.com/GaoshuaiSong/online.github.io/zipball/master" class="zip"><em>download</em> .ZIP</a><a href="https://github.com/GaoshuaiSong/online.github.io/tarball/master" class="tgz"><em>download</em> .TGZ</a>
+        </span>
+      </section>
+
+
+      <span class="banner-fix"></span>
+
+
+      <section id="main_content">
+        <h3>
+<a id="welcome-to-gaoshuaisong-github-pages" class="anchor" href="#welcome-to-gaoshuaisong-github-pages" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Welcome to GaoshuaiSong GitHub Pages.</h3>
+
+<ul>
+<li><p>引入内联函数是为了解决函数调用效率的问题</p></li>
+<li><p>由于函数之间的调用，会从一个内存地址调到另外一个内存地址，当函数调用完毕之后还会返回原来函数执行的地址。函数调用会有一定的时间开销，引入内联函数就是为了解决这一问题。</p></li>
+</ul>
+
+<h1>
+<a id="define-uikit_static_inline-static-inline" class="anchor" href="#define-uikit_static_inline-static-inline" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>define UIKIT_STATIC_INLINE static inline</h1>
+
+<p>UIKIT_STATIC_INLINE UIEdgeInsets UIEdgeInsetsMake(CGFloat top, CGFloat left, CGFloat bottom, CGFloat right) {
+    UIEdgeInsets insets = {top, left, bottom, right};
+    return insets;
+}</p>
+
+<p>UIKIT_STATIC_INLINE UIOffset UIOffsetMake(CGFloat horizontal, CGFloat vertical) {
+    UIOffset offset = {horizontal, vertical};
+    return offset;
+}
+...</p>
+
+<p>那么引用内联函数到底有什么区别呢？</p>
+
+<p>“为了解决函数调用效率的问题”</p>
+
+<p>如何解决呢?</p>
+
+<p>如果用static inline声明一个内联函数，</p>
+
+<h1>
+<a id="ifndef-inline_inline_h" class="anchor" href="#ifndef-inline_inline_h" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ifndef inline_inline_h</h1>
+
+<h1>
+<a id="define-inline_inline_h" class="anchor" href="#define-inline_inline_h" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>define inline_inline_h</h1>
+
+<p>static inline int add(int a, int b){
+    return a+b;
+}</p>
+
+<h1>
+<a id="endif" class="anchor" href="#endif" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>endif</h1>
+
+<p>int main(int argc, const char * argv[]) {
+    int c = add(1, 2);
+    return 0;
+}</p>
+
+<h1>
+<a id="ifndef-notinline_header_h" class="anchor" href="#ifndef-notinline_header_h" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ifndef notInline_Header_h</h1>
+
+<h1>
+<a id="define-notinline_header_h" class="anchor" href="#define-notinline_header_h" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>define notInline_Header_h</h1>
+
+<p>int add(int a, int b){
+    return a+b;
+}</p>
+
+<h1>
+<a id="endif-1" class="anchor" href="#endif-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>endif</h1>
+
+<p>int main(int argc, const char * argv[]) {
+    int c = add(1,2);
+    return 0;
+}</p>
+
+<p>在汇编文件中，声明内联函数的代码量几乎是不声明内联代码量的两倍。在没有声明内联函数的汇编中，main函数有单独汇编的。</p>
+
+<p>对比两者的mian.m的汇编代码，可以发现，没有使用`static inline修饰的内联函数的mian函数汇编代码中，会出现 call 指令！这就是区别！调用call指令就是就需要： </p>
+
+<ul>
+<li><p>(1)将下一条指令的所在地址（即当时程序计数器PC的内容）入栈 </p></li>
+<li><p>(2)并将子程序的起始地址送入PC（于是CPU的下一条指令就会转去执行子程序）。</p></li>
+</ul>
+
+<p>影响效率的原因就是在解决在call调用这里了。</p>
+      </section>
+
+      <footer>
+        <span class="ribbon-outer">
+          <span class="ribbon-inner">
+            <p>this project by <a href="https://github.com/GaoshuaiSong">GaoshuaiSong</a> can be found on <a href="https://github.com/GaoshuaiSong/online.github.io">GitHub</a></p>
+          </span>
+          <span class="left-tail"></span>
+          <span class="right-tail"></span>
+        </span>
+        <p>Generated with <a href="https://pages.github.com">GitHub Pages</a> using Merlot</p>
+        <span class="octocat"></span>
+      </footer>
+
+    </div>
+
+    
+  </body>
+</html>
